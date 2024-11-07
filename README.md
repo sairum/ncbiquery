@@ -27,13 +27,13 @@ in which case **50** records are returned!
 
 ## A Qt6 Class to query GenBank
 
-The Qt class developed to query and process GenBank data will be named *GbQuery* and should retrieve all GenBank records given a well formed query term and get rid of any superfluous information. At first, this task may seem trivial. However, a normal GenBank request is made of at least two distinct HTTPS calls through its REST API. The first request uses the endpoint *esearch* and returns all record IDs in GenBank that match the query term. These IDs are called *GenBank IDs* or *GIs* (or *GIDs*) and are unique within GenBank. An example of a search for sequences of COI for *Corophium volutator* (an amphipod) would be:
+The Qt class developed to query and process GenBank data will be named *GbQuery* and should retrieve all GenBank records given a well formed query term and get rid of any superfluous information. At first this task may seem trivial. However, a typical GenBank request is made of at least two distinct HTTPS calls through NCBI's REST API. The first request uses the endpoint *esearch* and returns all record IDs in GenBank that match the query term. These IDs are called *GenBank IDs* or *GIs* (or *GIDs*) and are unique within GenBank. An example of a search for sequences of COI for *Corophium volutator* (an amphipod) would be:
 
 ```
 https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=nuccore&term=Corophium+volutator[organism]+AND+COI[gene]&retmax=20
 ```
 
-Note that spaces are not allowed in the HTTP request, so they were replaced by a '+' character. The result of such request is a XML document which contains, among other information, the GIs of the matching records (in the case, four records, which are also depicted in the \<Count\> tag) enclosed in \<Id\> tags:
+Note that spaces are not allowed in the HTTP request, so they were replaced by a '+' character. The result of such request is a XML document which contains, among other information, the number of records found (in the \<Count\> tagt) plus the GIs of the matching records enclosed in \<Id\> tags:
 
 ```
 <eSearchResult>
@@ -47,13 +47,11 @@ Note that spaces are not allowed in the HTTP request, so they were replaced by a
     <Id>936252832</Id>
     </IdList>
   <TranslationSet>
-
   ...
-
 </eSearchResult>
 ```
 
-With this list (936254122, 936253636, 936253006, and 936252832), a second call to GenBank REST API using the *efetch* endpoint, is done to retrieve the records themselves. The new query should be:
+With this list (936254122, 936253636, 936253006, and 936252832), a second call to NCBI's REST API using the *efetch* endpoint is done to retrieve the records themselves. The new query should be:
 
 ```
 https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=936254122,936253636,936253006,936252832&retmax=20&rettype=gb&retmode=xml
@@ -83,7 +81,6 @@ The result is returned in a XML stream, which looks like the list below. A \<GBS
       <GBSeqid>gi|936254122</GBSeqid>
     </GBSeq_other-seqids>
     ...
-
     <GBSeq_sequence>
         aactctttattttatcttaggaacttggtccggattagtagggacctctataagaataattattcgaactgaattaagagggcccgg
         aaatttaattggtaatgaccaaatttataacgtaattgtgactgcacacgcttttattataatttttttcatagttataccgatcat
@@ -96,9 +93,7 @@ The result is returned in a XML stream, which looks like the list below. A \<GBS
     </GBSeq_sequence>
   </GBSeq>
   <GBSeq>
-
   ...
-
 </GBSet>
 ```
 
