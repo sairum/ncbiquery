@@ -1,5 +1,6 @@
 #include <QNetworkReply>
 #include <QDebug>
+#include <QMutex>
 
 #include "esearch.h"
 #include "efetch.h"
@@ -125,10 +126,12 @@ GbQuery::~GbQuery()
 
 void GbQuery::setQueryParams(const QString organism,
                              const QString marker,
+                             const QString key,
                              const ulong retMaxRecords )
 {
     _organism   = organism;
     _marker     = marker;
+    _apiKey     = key;
     _searchTerm = organism + "[organism]+AND+" + marker;
     // qDebug() << "Search term: " << _searchTerm;
     _retMax     = retMaxRecords;
@@ -136,7 +139,7 @@ void GbQuery::setQueryParams(const QString organism,
 
 /*****************************************************************************/
 /*                                                                           */
-/* 'fetchFromNCBI' composes a query to be submited to NCBI's 'efetch' utils  */
+/* 'searchNCBI' composes a query to be submited to NCBI's 'esearch' utils    */
 /*                                                                           */
 /*****************************************************************************/
 
@@ -160,12 +163,15 @@ void GbQuery::searchNCBI( ulong startAtRecord )
     }
 
     // Set the API Key if it exists
-    // query += "&api_key=" + API_KEY;
+    if( _apiKey != "" )
+    {
+        query += "&api_key=" + _apiKey;
+    }
 
     url.setQuery( query );
     request.setUrl( url );
 
-    // qDebug() << url.toString();
+    qDebug() << url.toString();
 
     request.setRawHeader( "Content-Type",
                           "text/html,application/xhtml+xml,application/xml" );
@@ -216,11 +222,15 @@ void GbQuery::fetchFromNCBI()
     query += "&retmax=" + QString::number( _retMax );
 
     // Set the API Key if exists
-    // if( getApiKey() != "")
-    //     query += "&api_key=" + getApiKey();
+    if( _apiKey != "" )
+    {
+        query += "&api_key=" + _apiKey;
+    }
 
     url.setQuery( query );
     request.setUrl( url );
+
+    qDebug() << url.toString();
 
     request.setRawHeader( "Content-Type",
                           "text/html,application/xhtml+xml,application/xml" );
@@ -273,15 +283,16 @@ void GbQuery::processESearch()
             retmax     = p.retMax();
             retstart   = p.retStart();
 
+            _giList     = p.idList();
+
+            // Update number of expected records
+            setCount( count );
+
             // qDebug() << "Count:    " << count;
             // qDebug() << "RetMax:   " << retmax;
             // qDebug() << "RetStart: " << retstart;
             // qDebug() << "List of IDs";
-            _giList = p.idList();
-            // for( long id : _giList )
-            // {
-            //     qDebug() << id;
-            // }
+            // for( long id : _giList ) qDebug() << id;
 
             fetchFromNCBI();
 
@@ -313,6 +324,8 @@ void GbQuery::processESearch()
 void GbQuery::processEFetch()
 {
 
+    ulong   records  {0};
+
     QNetworkReply *reply = qobject_cast<QNetworkReply*>( sender() );
 
     // Mark the reply for deletion later
@@ -332,6 +345,11 @@ void GbQuery::processEFetch()
         {
             qDebug() << e.errorMessage();
         }
+
+        records = e.fetchedRecords();
+
+        // Update records fetched
+        setFetchedRecords( records );
     }
     else
     {
@@ -340,10 +358,36 @@ void GbQuery::processEFetch()
 
     if( _canQuit )
     {
-        emit quit();
+        //emit quit();
     }
 }
 
+/*****************************************************************************/
+/*                                                                           */
+/* 'setCount' sets the total number of records expected after the first      */
+/* successful query to NCBI. This number is not expected to change during    */
+/* subsequent calls to NCBI for the same query.                              */
+/*                                                                           */
+/*****************************************************************************/
 
+void GbQuery::setCount( ulong count )
+{
+    if( _count == 0 )
+    {
+        _count = count;
+    }
+}
+
+void GbQuery::setFetchedRecords( ulong records )
+{
+    QMutex mutex;
+    mutex.lock();
+    _recordsFetched += records;
+    mutex.unlock();
+    if( _recordsFetched == _count )
+    {
+        emit quit();
+    }
+}
 
 

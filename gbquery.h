@@ -14,7 +14,10 @@ class GbQuery : public QObject
 public:
     explicit        GbQuery( QObject * parent = nullptr );
     ~GbQuery();
-    void            setQueryParams( const QString, const QString, const ulong );
+    void            setQueryParams( const QString,
+                                    const QString,
+                                    const QString,
+                                    const ulong );
 
 signals:
     void            search( ulong );
@@ -24,6 +27,7 @@ public slots:
     void            searchNCBI( ulong startAtRecord = 0 );
 
 private:
+    QString         _apiKey         {""};
     QString         _organism       {""};
     QString         _marker         {""};
     QString         _scheme         {"https"};
@@ -34,12 +38,16 @@ private:
     ulong           _retMax         {20};
 
     bool            _canQuit        {false};
+    ulong           _recordsFetched {0};
+    ulong           _count          {0};
 
     QList<ulong>    _giList;
 
     QNetworkAccessManager           *_manager;
 
     void            fetchFromNCBI();
+    void            setCount( ulong );
+    void            setFetchedRecords( ulong );
 
 private slots:
     void            processESearch();

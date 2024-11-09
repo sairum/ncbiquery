@@ -65,20 +65,22 @@ bool Efetch::parseXML(const QByteArray http_response )
                 // in a <GBSeq></GBSeq> pair of tags. For each new record, we
                 // should clear the respective attribute fields
 
-                qDebug() << "\n--------------";
+                // qDebug() << "\n--------------";
+
+                _records++;
             }
             else if ( _elementname == "GBSeq_sequence" )
             {
                 // This element represents a true sequence
                 QString sequence = _xml.readElementText();
-                qDebug() << "Sequence: " << sequence.toStdString();
+                // qDebug() << "Sequence: " << sequence.toStdString();
             }
             else if ( _elementname == "GBSeq_accession-version")
             {
                 // This element holds the accession number + version
                 // of the sequence in <GBSeq_sequence>
                 QString accession = _xml.readElementText();
-                qDebug() << "Accession: " << accession.toStdString();
+                // qDebug() << "Accession: " << accession.toStdString();
             }
             else if( _elementname == "GBSeqid" )
             {
@@ -93,9 +95,9 @@ bool Efetch::parseXML(const QByteArray http_response )
                 QString qualname = _xml.readElementText();
                 QStringList list = qualname.split('|');
                 QString gi {""};
-                if( list[0] == "gi" ) gi = list[1];
-                if( gi != "" )
+                if( list[0] == "gi" )
                 {
+                    gi = list[1];
                     qDebug() << "GI: " << gi.toStdString();
                 }
             }
@@ -119,7 +121,7 @@ bool Efetch::parseXML(const QByteArray http_response )
                 if( qualname == "organism" )
                 {
                     QString organism = qualvalue;
-                    qDebug() << "Organism: " << organism.toStdString();
+                    // qDebug() << "Organism: " << organism.toStdString();
                 }
             }
         }
@@ -151,4 +153,9 @@ bool Efetch::hasError()
 QString Efetch::errorMessage()
 {
     return _errorMessage;
+}
+
+ulong Efetch::fetchedRecords()
+{
+    return _records;
 }
