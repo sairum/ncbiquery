@@ -1,6 +1,7 @@
 #include <QNetworkReply>
 #include <QDebug>
 #include <QMutex>
+#include <QThread>
 
 #include "esearch.h"
 #include "efetch.h"
@@ -298,15 +299,17 @@ void GbQuery::processESearch()
 
             if( retstart + retmax < count )
             {
+                // If no API Key is provided slow down the number of queries
+                // per second. Otherwise, NCBIs REST API will block you and
+                // the program as well!
+
+                if ( _apiKey == "") QThread::sleep(1);
+
                 retstart += retmax;
                 emit search( retstart );
             }
-            else
-            {
-                _canQuit = true;
-            }
-
-        } else
+        }
+        else
         {
             qDebug() << p.errorMessage();
         }
@@ -355,11 +358,6 @@ void GbQuery::processEFetch()
     {
         qDebug() << reply->error();
     }
-
-    if( _canQuit )
-    {
-        //emit quit();
-    }
 }
 
 /*****************************************************************************/
@@ -389,5 +387,6 @@ void GbQuery::setFetchedRecords( ulong records )
         emit quit();
     }
 }
+
 
 

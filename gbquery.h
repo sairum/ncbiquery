@@ -37,7 +37,6 @@ private:
     QString         _searchTerm     {""};
     ulong           _retMax         {20};
 
-    bool            _canQuit        {false};
     ulong           _recordsFetched {0};
     ulong           _count          {0};
 

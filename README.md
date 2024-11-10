@@ -107,7 +107,7 @@ The whole process of finding and retrieving data from GenBank is asynchronous. U
 
 
 ```
-QNetworkReply * _reply = _manager->get( _request );
+QNetworkReply *reply = _manager->get( _request );
 ```
 
 The *_reply* object will contain the result (in XML format) or an error, and should be processed once the *QNetworkAccessManager::finished* signal is fired. This signal is usually connected with a slot of *_manager* which is able to process the resulting XML. In the present implementation this slot would be *_manager->processESearch()*. Note the *would be*. Things are more complicated as you can see next.
@@ -119,7 +119,7 @@ At this stage there are three options: 1) we destroy the old connection and crea
 Right now the *GbQuery* Class uses the latter option. However, there is an additional problem. Contrary to *QNetworkAccessManager*, the *finished* signal of *QNetworkReply* does not carry the object a pointer the the reply that triggered it. This makes it necessary to resort to the *sender()* method in order to obtain a pointer to the reply object.
 
 ```
-QNetworkReply *_reply = qobject_cast<QNetworkReply*>( sender() );
+QNetworkReply *reply = qobject_cast<QNetworkReply*>( sender() );
 ```
 
 Finally, to complicate things further, NCBI searches should be limited to a 'reasonable' amount of returned records. After all, it is a public and free service and people should use it sparingly. The default is usually to return 20 records per search and this can be explicitly set in the query to *esearch* through the *retmax* option. However, a normal search may return a result set that includes more than *retmax* records. In these cases, the *esearch* tool should keep track of a variable that stores where to begin retrieving records (or, put in another way, how many records to skip before starting retrieving records). This variable called *retstart* (a
