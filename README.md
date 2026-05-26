@@ -1,3 +1,5 @@
+#This repository was moved to Codeberg#
+
 # ncbiquery
 Fetch DNA sequences from NCBI
 
